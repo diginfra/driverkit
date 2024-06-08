@@ -1,0 +1,6 @@
+approvers:
+  - khulnasoft-bot
+  - gitworkflows
+reviewers:
+  - nxpkg
+  - fortishield
