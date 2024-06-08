@@ -12,12 +12,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package validate
 
 import (
-	"github.com/diginfra/driverkit/cmd"
+	"fmt"
+	"reflect"
+
+	"github.com/diginfra/driverkit/pkg/driverbuilder/builder"
+	"github.com/go-playground/validator/v10"
 )
 
-func main() {
-	cmd.Start()
+func isTargetSupported(fl validator.FieldLevel) bool {
+	field := fl.Field()
+
+	switch field.Kind() {
+	case reflect.String:
+		_, err := builder.Factory(builder.Type(field.String()))
+		return err == nil
+	}
+
+	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }

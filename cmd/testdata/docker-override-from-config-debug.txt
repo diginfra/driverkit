@@ -1,0 +1,13 @@
+INFO  using config file file: testdata/configs/1.yaml
+DEBUG running with options
+    ├ output-module: /tmp/override.ko
+    ├ output-probe: /tmp/diginfra-ubuntu-aws.o
+    ├ driverversion: master
+    ├ kernelrelease: 4.15.0-1057-aws
+    ├ kernelversion: 229
+    ├ target: ubuntu-aws
+    ├ arch: {{ .CurrentArch }}
+    ├ kernelurls: []
+    ├ repo-org: diginfra
+    └ repo-name: libs
+INFO  starting build processor: docker

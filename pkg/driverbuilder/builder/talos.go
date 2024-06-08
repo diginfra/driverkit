@@ -12,12 +12,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package builder
 
 import (
-	"github.com/diginfra/driverkit/cmd"
+	"github.com/diginfra/driverkit/pkg/kernelrelease"
 )
 
-func main() {
-	cmd.Start()
+// TargetTypeTalos identifies the Talos target.
+const TargetTypeTalos Type = "talos"
+
+func init() {
+	byTarget[TargetTypeTalos] = &talos{
+		vanilla{},
+	}
+}
+
+type talos struct {
+	vanilla
+}
+
+func (b *talos) Name() string {
+	return TargetTypeTalos.String()
+}
+
+func (b *talos) KernelTemplateData(kr kernelrelease.KernelRelease, urls []string) interface{} {
+	return vanillaTemplateData{
+		KernelDownloadURL:  urls[0],
+		KernelLocalVersion: kr.FullExtraversion,
+	}
 }

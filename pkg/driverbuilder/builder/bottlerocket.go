@@ -12,12 +12,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package builder
 
 import (
-	"github.com/diginfra/driverkit/cmd"
+	"github.com/diginfra/driverkit/pkg/kernelrelease"
 )
 
-func main() {
-	cmd.Start()
+// TargetTypeBottlerocket identifies the Bottlerocket target.
+const TargetTypeBottlerocket Type = "bottlerocket"
+
+func init() {
+	byTarget[TargetTypeBottlerocket] = &bottlerocket{
+		vanilla{},
+	}
+}
+
+type bottlerocket struct {
+	vanilla
+}
+
+func (b *bottlerocket) Name() string {
+	return TargetTypeBottlerocket.String()
+}
+
+func (b *bottlerocket) KernelTemplateData(kr kernelrelease.KernelRelease, urls []string) interface{} {
+	return vanillaTemplateData{
+		KernelDownloadURL:  urls[0],
+		KernelLocalVersion: kr.FullExtraversion,
+	}
 }

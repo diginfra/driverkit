@@ -1,0 +1,36 @@
+name: Master CI
+on:
+  push:
+    branches: [master]
+
+# Checks if any concurrent jobs is running for master CI and eventually cancel it
+concurrency:
+  group: ci-master
+  cancel-in-progress: true  
+
+jobs:
+  build-test-master:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    uses: ./.github/workflows/reusable_build_test_driverkit.yml
+    with:
+      arch: ${{ matrix.arch }}
+
+  push-images-master:
+    needs: build-test-master
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    uses: ./.github/workflows/reusable_build_push_images.yml
+    with:
+      arch: ${{ matrix.arch }}
+      push: true
+    secrets: inherit
+
+  images-master:
+    needs: push-images-master
+    uses: ./.github/workflows/reusable_manifest_images.yml
+    secrets: inherit
+      
+    

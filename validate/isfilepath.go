@@ -12,12 +12,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package validate
 
 import (
-	"github.com/diginfra/driverkit/cmd"
+	"fmt"
+	"os"
+	"reflect"
+
+	"github.com/go-playground/validator/v10"
 )
 
-func main() {
-	cmd.Start()
+func isFilePath(fl validator.FieldLevel) bool {
+	field := fl.Field()
+
+	switch field.Kind() {
+	case reflect.String:
+		fileInfo, err := os.Stat(field.String())
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return false
+			}
+			return true
+		}
+
+		return !fileInfo.IsDir()
+	}
+
+	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }

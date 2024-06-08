@@ -12,12 +12,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package builder
 
-import (
-	"github.com/diginfra/driverkit/cmd"
-)
+// byTarget maps targets to their builder.
+var byTarget = map[Type]Builder{}
 
-func main() {
-	cmd.Start()
+// Type is a type representing targets.
+type Type string
+
+func (t Type) String() string {
+	return string(t)
 }

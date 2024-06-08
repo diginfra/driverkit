@@ -12,12 +12,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package validate
 
 import (
-	"github.com/diginfra/driverkit/cmd"
+	"fmt"
+	"reflect"
+	"regexp"
+
+	"github.com/go-playground/validator/v10"
 )
 
-func main() {
-	cmd.Start()
+var proxyRegex = regexp.MustCompile("^(http://|https://|socks5://)")
+
+func isProxy(fl validator.FieldLevel) bool {
+	field := fl.Field()
+
+	switch field.Kind() {
+	case reflect.String:
+		return proxyRegex.MatchString(field.String())
+	}
+
+	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }

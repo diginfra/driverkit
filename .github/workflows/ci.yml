@@ -1,0 +1,77 @@
+name: CI Build
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+# Checks if any concurrent jobs under the same pull request or branch are being executed
+# NOTE: this will cancel every workflow that is being ran against a PR as group is just the github ref (without the workflow name)
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true  
+
+jobs:
+  build-test-dev:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    uses: ./.github/workflows/reusable_build_test_driverkit.yml
+    with:
+      arch: ${{ matrix.arch }}
+
+  paths-filter:
+    runs-on: ubuntu-latest
+    outputs:
+      docker_needs_build: ${{ steps.filter.outputs.docker == 'true' }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter
+        with:
+          filters: |
+            docker:
+              - 'docker/**'  
+
+  build-images-dev:
+    needs: [build-test-dev,paths-filter]
+    if: needs.paths-filter.outputs.docker_needs_build
+    strategy:
+      matrix:
+        arch: [ amd64, arm64 ]
+    uses: ./.github/workflows/reusable_build_push_images.yml
+    with:
+      arch: ${{ matrix.arch }}
+      push: false
+    secrets: inherit
+
+  gomodtidy:
+    name: Enforce go.mod tidiness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+        with:
+          ref: "${{ github.event.pull_request.head.sha }}"
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Execute go mod tidy and check the outcome
+        working-directory: ./
+        run: |
+          go mod tidy
+          exit_code=$(git diff --exit-code)
+          exit ${exit_code}
+
+      - name: Print a comment in case of failure
+        run: |
+          echo "The go.mod and/or go.sum files appear not to be correctly tidied.
+
+          Please, rerun go mod tidy to fix the issues."
+          exit 1
+        if: |
+          failure() && github.event.pull_request.head.repo.full_name == github.repository    

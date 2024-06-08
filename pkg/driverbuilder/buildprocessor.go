@@ -12,12 +12,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package driverbuilder
 
 import (
-	"github.com/diginfra/driverkit/cmd"
+	"github.com/diginfra/driverkit/pkg/driverbuilder/builder"
 )
 
-func main() {
-	cmd.Start()
+type BuildProcessor interface {
+	Start(b *builder.Build) error
+	String() string
 }

@@ -12,12 +12,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package validate
 
 import (
-	"github.com/diginfra/driverkit/cmd"
+	"fmt"
+	"reflect"
+
+	"github.com/diginfra/driverkit/pkg/kernelrelease"
+	"github.com/go-playground/validator/v10"
 )
 
-func main() {
-	cmd.Start()
+func isArchitectureSupported(fl validator.FieldLevel) bool {
+	field := fl.Field()
+
+	switch field.Kind() {
+	case reflect.String:
+		for arch := range kernelrelease.SupportedArchs {
+			if arch.String() == field.String() {
+				return true
+			}
+		}
+		return false
+	}
+
+	panic(fmt.Sprintf("Bad field type %T", field.Interface()))
 }

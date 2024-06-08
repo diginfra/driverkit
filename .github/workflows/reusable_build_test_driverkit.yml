@@ -1,0 +1,47 @@
+# This is a reusable workflow used by master and release CI
+on:
+  workflow_call:
+    inputs:
+      arch:
+        description: amd64 or arm64
+        required: true
+        type: string
+
+jobs:
+  build-test:
+    # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
+    runs-on: ${{ (inputs.arch == 'arm64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build
+        run: make build
+        
+      - name: Test
+        run: make test
+        
+      - name: Set integration tests DRIVERVERSIONS env
+        if: inputs.arch == 'amd64'
+        run: echo "DRIVERVERSIONS=master 6.0.1+driver 2.0.0+driver 17f5df52a7d9ed6bb12d3b1768460def8439936d" >> $GITHUB_ENV
+        
+      - name: Set integration tests DRIVERVERSIONS env
+        if: inputs.arch == 'arm64'
+        run: echo "DRIVERVERSIONS=master 6.0.1+driver 2.0.0+driver" >> $GITHUB_ENV
+      
+      - name: Integration tests
+        run: make integration_test
+        
+      - name: Upload driverkit
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: driverkit-${{ inputs.arch }}
+          path: |
+            ${{ github.workspace }}/_output/bin/driverkit

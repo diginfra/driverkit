@@ -1,0 +1,13 @@
+DEBUG running without a configuration file 
+DEBUG running with options
+    ├ output-module: /tmp/diginfra-ubuntu-aws.ko
+    ├ output-probe: /tmp/diginfra-ubuntu-aws.o
+    ├ driverversion: master
+    ├ kernelrelease: 4.15.0-1057-aws
+    ├ kernelversion: 59
+    ├ target: ubuntu-aws
+    ├ arch: {{ .CurrentArch }}
+    ├ kernelurls: [https://mirrors.edge.kernel.org/ubuntu/pool/main/l/linux-aws/linux-aws-headers-4.15.0-1057_4.15.0-1057.59_all.deb https://mirrors.edge.kernel.org/ubuntu/pool/main/l/linux-aws/linux-headers-4.15.0-1057-aws_4.15.0-1057.59_amd64.deb]
+    ├ repo-org: diginfra
+    └ repo-name: libs
+INFO  starting build processor: docker

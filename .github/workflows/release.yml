@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: write # needed to write releases
+  id-token: write # needed for keyless signing
+
+jobs:
+  build-test-release:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    uses: ./.github/workflows/reusable_build_test_driverkit.yml
+    with:
+      arch: ${{ matrix.arch }}
+
+  push-images-release:
+    needs: build-test-release
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    uses: ./.github/workflows/reusable_build_push_images.yml
+    with:
+      arch: ${{ matrix.arch }}
+      tag: ${{ github.ref_name }}
+      is_latest: true
+      push: true
+    secrets: inherit  
+
+  images-release:
+    needs: push-images-release
+    uses: ./.github/workflows/reusable_manifest_images.yml
+    with:
+      tag: ${{ github.ref_name }}
+      is_latest: true
+    secrets: inherit
+
+  release:
+    needs: images-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch
+        run: git fetch --prune --force --tags
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
+      
+      - name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          install-only: true
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_TAG: ${{ github.ref_name }}
+        run: make release  
